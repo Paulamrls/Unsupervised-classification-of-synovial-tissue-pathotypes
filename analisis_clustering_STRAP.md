@@ -63,7 +63,7 @@ Los tres clusters presentan también una superposición importante, aunque se ob
 
 ### **Figura 4 — Dendrograma jerárquico (Hierarchical Clustering — Ward)**
 
-Este gráfico no se incluye directamente entre las imágenes proporcionadas con nombre explícito, pero el código genera un dendrograma coloreado por k = 3 ramas. A partir del gráfico `hierarchical coloreado.png`:
+![HIERARCHICAL RNA-seq clusters](img/hierarchical/coloreado.png)
 
 El dendrograma muestra la estructura de agrupamiento aglomerativo con distancia euclídea y enlace Ward.D2. Las ramas coloreadas en tres grupos revelan que las fusiones entre clusters ocurren a alturas relativamente bajas, con un salto brusco en la parte superior del árbol. Esto indica que, aunque el método detecta cierta estructura a escala local, las diferencias entre los grandes grupos son modestas en relación con la variabilidad intracluster. La estructura del dendrograma es consistente con un escenario de clusters difusos, donde la decisión de cortar en k = 3 es razonable pero no robusta.
 
