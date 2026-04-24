@@ -1,28 +1,4 @@
-# Análisis de Clustering No Supervisado de Patotipos en Artritis Reumatoide --- STRAP RNA-seq
-
-## 1. Introducción
-
-La artritis reumatoide (AR) es una enfermedad autoinmune crónica
-caracterizada por una elevada heterogeneidad biológica, tanto a nivel
-clínico como molecular. En el tejido sinovial, esta heterogeneidad se
-traduce en distintos patotipos histológicos que reflejan mecanismos
-inmunológicos diferenciados.
-
-Los principales patotipos descritos en la literatura son:
-
--   **Lymphoid**: caracterizado por infiltración de células B y T
-    organizadas, con expresión de genes como *CXCL13*, *CD79A* o
-    *MS4A1*.
--   **Myeloid**: dominado por la respuesta inflamatoria innata, con alta
-    expresión de *IL1B*, *TNF* y *S100A8/A9*.
--   **Fibroid**: asociado a fibroblastos y remodelación de la matriz
-    extracelular (*COL1A1*, *FN1*, *THY1*).
-
-El objetivo de este trabajo es evaluar si estos patotipos pueden ser
-identificados mediante técnicas de clustering no supervisado sobre datos
-de RNA-seq.
-
-------------------------------------------------------------------------
+# Análisis de Clustering No Supervisado de Patotipos en Artritis Reumatoide 24/04
 
 ## 2. Datos y preprocesamiento
 
