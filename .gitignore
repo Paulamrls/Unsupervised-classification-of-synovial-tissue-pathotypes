@@ -1,0 +1,26 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Datos crudos (demasiado grandes para GitHub)
+*.RData
+strap_counts.RData
+
+# Archivos de Word/Office
+*.docx
+*.doc
+
+# Carpeta interna de Claude
+.claude/
+
+# Scripts antiguos (versiones previas)
+STRAP_08_05.R
+STRAP_08_05_corregido.R
+STRAP_24_04.R
+STRAP_26_03.R
+
+# Carpetas de resultados anteriores
+results_STRAP_unsupervised/
+plots/
+Rplot.png
