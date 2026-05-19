@@ -10,22 +10,52 @@
 #      reciben nombres basados en sus genes marcadores principales.
 #
 # Firmas de referencia (genes canónicos de AR):
-#   Fibroid:  genes de fibroblastos sinoviales (CXCL12, PDPN, PRG4, THY1)
-#   Myeloid:  genes de macrófagos/monocitos   (CD68, MRC1, CSF1R, IL1B)
-#   Lymphoid: genes de linfocitos              (CD3D, CD19, MS4A1, SELL)
-#   IFN-high: interferón                       (MX1, OAS1, IFIT1, ISG15)
+#   Fibroid:   genes de fibroblastos sinoviales  (CXCL12, PDPN, PRG4, THY1)
+#   Myeloid:   genes de macrófagos/monocitos     (CD68, MRC1, CSF1R, IL1B)
+#   Lymphoid:  genes de linfocitos               (CD3D, CD19, MS4A1, SELL)
+#   IFN_high:  interferón tipo I                 (MX1, OAS1, IFIT1, ISG15)
+#   Vascular:  endotelio y angiogénesis sinovial (EMCN, JAM2, AQP1, SPARCL1)
+#              → firma descubierta empíricamente en este análisis a partir
+#                de los DEGs del cluster mixto de k=5 (Morales Sandoica, 2025)
+#              → respaldada por literatura de angiogénesis en AR:
+#                Del Rey et al. (2009) Arthritis Rheum — AQP1 en FLS/endotelio
+#                Fearon et al. (2003) Arthritis Rheum — angiogénesis sinovial
 # ==============================================================================
 
 # ── Firmas génicas de referencia para AR sinovial ─────────────────────────────
 RA_SIGNATURES <- list(
+
+  # Fibroblastos sinoviales activados
+  # Refs: Croft et al. (2019) Nature; Buckley et al. (1999) J Immunol
   Fibroid  = c("CXCL12", "PDPN", "PRG4", "THY1", "CDH11", "FAP",
                "ACTA2", "COL1A1", "COL3A1", "FN1"),
+
+  # Macrófagos/monocitos proinflamatorios
+  # Refs: Humby et al. (2019) Ann Rheum Dis; McInnes & Schett (2011) NEJM
   Myeloid  = c("CD68", "MRC1", "CSF1R", "IL1B", "TNF", "IL6",
                "ITGAM", "CD14", "FCGR3A", "CCL2"),
+
+  # Linfocitos T y B en agregados linfoides sinoviales
+  # Refs: Takemura et al. (2001) J Immunol; Humby et al. (2009) PLoS Med
   Lymphoid = c("CD3D", "CD3E", "CD19", "MS4A1", "SELL", "PTPRC",
                "CD4", "CD8A", "FOXP3", "CXCR5"),
+
+  # Respuesta a interferón tipo I
+  # Refs: Higgs et al. (2011) Arthritis Rheum; Boyle et al. (2021) ARD
   IFN_high = c("MX1", "OAS1", "IFIT1", "IFIT3", "ISG15", "RSAD2",
-               "IFI44L", "CXCL10", "IRF7", "STAT1")
+               "IFI44L", "CXCL10", "IRF7", "STAT1"),
+
+  # Endotelio vascular y angiogénesis sinovial
+  # Firma descubierta empíricamente en este análisis (DEGs cluster k=5)
+  # EMCN: marcador exclusivo de endotelio vascular (Brachtendorf et al. 2001)
+  # JAM2: uniones estrechas endoteliales (Cunningham et al. 2000)
+  # AQP1: canal de agua en microvasculatura sinovial (Del Rey et al. 2009)
+  # SPARCL1: glicoproteína matricelular reguladora de angiogénesis
+  # PKN3: quinasa pro-angiogénica vía VEGF
+  # TNFRSF11B (OPG): producida por endotelio, regula RANKL/osteoclastogénesis
+  # DIO2: deiodinasa expresada en FLS sinoviales (Torii et al. 2018)
+  Vascular = c("EMCN", "JAM2", "AQP1", "SPARCL1", "PKN3",
+               "TRPC1", "TNFRSF11B", "DIO2", "CLEC3A", "SNTB2")
 )
 
 # ── Puntuación de firma para cada muestra ────────────────────────────────────
@@ -97,7 +127,8 @@ annotate_clusters <- function(clusters, expr, meta, k,
   sig_name_map <- c(Fibroid  = "Fibroid",
                     Myeloid  = "Myeloid",
                     Lymphoid = "Lymphoid",
-                    IFN_high = "IFN-high")
+                    IFN_high = "IFN-high",
+                    Vascular = "Vascular")
 
   for (cl in cluster_ids) {
     cl_char <- as.character(cl)
@@ -120,7 +151,7 @@ annotate_clusters <- function(clusters, expr, meta, k,
 
   # Paso 5: Ordenar labels según orden biológico canónico
   # (fibroide, mieloide, linfoide, luego nuevos por orden de cluster_id)
-  canonical_order <- c(pathotype_order, "IFN-high",
+  canonical_order <- c(pathotype_order, "IFN-high", "Vascular",
                        paste0("Subtype", 1:10))
   ordered_labels  <- labels[order(match(labels, canonical_order,
                                         nomatch = 999))]

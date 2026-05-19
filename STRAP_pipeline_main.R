@@ -63,15 +63,20 @@ N_TOP_MARKERS  <- 20    # marcadores a mostrar por cluster
 PATHOTYPE_ORDER <- c("Fibroid", "Myeloid", "Lymphoid")
 
 # ── Paleta de colores consistente en TODOS los gráficos ─────────────────────
+# Orden alineado con canonical_order en 05_annotation.R:
+#   Fibroid → Myeloid → Lymphoid → IFN-high → Vascular → Subtype1…
 # Si k > 3 se usan los colores adicionales en orden
 PATHOTYPE_COLORS <- c(
-  "Fibroid"   = "#E41A1C",   # rojo
-  "Myeloid"   = "#377EB8",   # azul
-  "Lymphoid"  = "#4DAF4A",   # verde
-  "Subtype4"  = "#984EA3",   # morado
-  "Subtype5"  = "#FF7F00",   # naranja
-  "Subtype6"  = "#A65628",   # marrón
-  "Subtype7"  = "#F781BF",   # rosa
+  "Fibroid"   = "#E41A1C",   # rojo        — fibroblastos sinoviales
+  "Myeloid"   = "#377EB8",   # azul        — macrófagos/monocitos
+  "Lymphoid"  = "#4DAF4A",   # verde       — linfocitos
+  "IFN-high"  = "#984EA3",   # morado      — interferón tipo I
+  "Vascular"  = "#1B9E77",   # verde azulado — endotelio / angiogénesis
+  "Subtype1"  = "#FF7F00",   # naranja
+  "Subtype2"  = "#A65628",   # marrón
+  "Subtype3"  = "#F781BF",   # rosa
+  "Subtype4"  = "#FFFF33",   # amarillo
+  "Subtype5"  = "#66C2A5",   # turquesa
   "Unresolved"= "#999999"    # gris
 )
 
