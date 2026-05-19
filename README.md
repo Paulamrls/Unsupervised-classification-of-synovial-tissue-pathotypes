@@ -5,103 +5,101 @@
 
 ## Descripción general
 
-La artritis reumatoide (AR) no es una enfermedad única — es un espectro de patologías sinoviales con composiciones celulares y programas moleculares distintos. La clasificación histopatológica define tres patotipos canónicos: **Fibroide**, **Mieloide** y **Linfoide**. Sin embargo, si estas categorías son realmente discretas a nivel transcriptómico, o si se funden en un paisaje continuo, sigue siendo una pregunta abierta.
+La artritis reumatoide (AR) no es una enfermedad única — es un espectro de patologías sinoviales con composiciones celulares y programas moleculares distintos. La clasificación histopatológica define tres patotipos canónicos: **Fibroide**, **Mieloide** y **Linfoide**. Estudios posteriores han descrito un cuarto patotipo transcriptómico, **IFN-high**, con implicaciones terapéuticas específicas.
 
-Este proyecto aplica clustering no supervisado a datos de RNA-seq masivo (*bulk*) de la cohorte STRAP (n ≈ 300 biopsias sinoviales) para responder a: *¿puede la expresión génica por sí sola reconstruir subgrupos biológicamente significativos que se alineen con — o vayan más allá de — la clasificación canónica de patotipos?*
+Sin embargo, la mayoría de estos estudios utilizan métodos supervisados o scoring de firmas génicas predefinidas. Este trabajo evalúa si métodos de clustering completamente **no supervisados** aplicados a datos bulk RNA-seq son capaces de recuperar esta estructura biológica de forma independiente, y qué métodos son más robustos para ello.
 
-El pipeline compara **8 métodos de clustering** (K-means, Jerárquico, Espectral, Consensus, Leiden, Louvain, Infomap, MCL), selecciona la solución más robusta y caracteriza cada cluster mediante expresión diferencial, firmas génicas de AR conocidas y comparación con el diagnóstico histológico.
+El pipeline compara **8 métodos de clustering** (K-means, Jerárquico, Espectral, Consensus, Leiden, Louvain, Infomap, MCL), selecciona la solución más robusta mediante silhouette y bootstrap ARI, y caracteriza cada cluster a través de expresión diferencial, firmas génicas de AR y comparación con el diagnóstico histológico.
 
 ---
 
 ## Principales hallazgos
 
-> **K-means con k = 4 identifica cuatro subgrupos transcriptómicos.** Tres se alinean ampliamente con los patotipos canónicos Fibroide, Mieloide y Linfoide. Un cuarto, denominado *Subtipo4*, co-segrega con muestras histológicamente Linfoides pero porta una identidad molecular distinta, lo que sugiere una subdivisión previamente no resuelta del estado sinovial rico en tejido linfoide.
+> **K-means con k=5 identifica cuatro estados transcriptómicos biológicamente interpretables** en el sinovio de AR, más un quinto cluster que representa un artefacto de calidad de biopsia. El análisis redescubre de forma independiente el patotipo **IFN-high** previamente descrito por métodos supervisados, validando la capacidad del pipeline. Adicionalmente, identifica un **estado vascular/angiogénico** (EMCN⁺, JAM2⁺, AQP1⁺) que trasciende las fronteras histológicas clásicas y no está recogido en la clasificación canónica.
 
-| Patotipo | Color | n (aprox.) | Biología dominante |
-|----------|-------|-----------|-------------------|
-| **Fibroide** | 🔴 | ~55 | Activación estromal, presentación de antígenos (genes HLA), remodelación de la ECM |
-| **Mieloide** | 🔵 | ~10 | Programa inflamatorio innato; cluster pequeño, transcriptómicamente concentrado |
-| **Linfoide** | 🟢 | ~40 | Actividad ribosomal/traduccional (RPL28, RPS19); infiltración de células T/B |
-| **Subtipo4** | 🟣 | ~110 | Firma tipo macrófago CD163⁺, tráfico de células inmunes (PLXNB2), respuesta al estrés |
+| Patotipo | Color | n | Biología dominante | Pureza histológica |
+|----------|-------|---|-------------------|-------------------|
+| **Fibroide** | 🔴 | 18 | Activación estromal, presentación antigénica HLA, FLS KRT⁺ | 72% Fibroide |
+| **Vascular-Estromal** | 🔵 | 67 | EMCN⁺ JAM2⁺ AQP1⁺ — firma endotelial/angiogénica | 43% Mieloide, mixto |
+| **Linfoide** | 🟢 | 77 | Linfocitos activos (RPL28, RPS19), agregados linfoides | 79% Linfoide |
+| **IFN-high** ⭐ | 🟣 | 39 | Respuesta interferónica, RF⁺, implicaciones terapéuticas | 72% Linfoide |
+| ~~Subtype4~~ | 🟠 | 5 | ⚠️ Artefacto: contaminación muscular (TNNI1, NEB) en pacientes masculinos con CRP alta | — |
+
+> **Nota sobre Subtype4:** El análisis clínico reveló 80% de pacientes masculinos (vs. 12–30% en el resto), CRP media 51.4 mg/L y expresión extrema de proteínas de músculo esquelético (TNNI1, NEB). Consistente con contaminación de tejido muscular adyacente en biopsias de pacientes masculinos con alta actividad inflamatoria periarticular. Excluido de la interpretación biológica principal.
 
 ---
 
 ## Reducción dimensional
 
-Se utilizaron dos enfoques complementarios para visualizar el paisaje transcriptómico:
-
-- **PCA** — captura la estructura de varianza lineal; PC1 (22,2%) y PC2 (21,8%) explican juntas ~44% de la varianza total.
-- **Mapas de Difusión** — captura la geometría no lineal y las trayectorias biológicas; ejes recortados al percentil 2,5–97,5 para evitar el colapso por outliers.
-
 <table>
 <tr>
-<th align="center">PCA — Solución K-means</th>
-<th align="center">Mapa de Difusión — Solución K-means</th>
+<th align="center">PCA — Solución K-means (k=5)</th>
+<th align="center">Mapa de Difusión — K-means (k=5)</th>
 </tr>
 <tr>
-<td><img src="results/figures/pca_kmeans.png" width="480"/></td>
-<td><img src="results/figures/diffusion_map.png" width="480"/></td>
+<td><img src="results_k5/results/figures/pca_kmeans.png" width="480"/></td>
+<td><img src="results_k5/results/figures/diffusion_map.png" width="480"/></td>
 </tr>
 </table>
 
-**Lectura del PCA:** Fibroide (rojo) se agrupa en el cuadrante superior izquierdo; Linfoide (verde) se extiende hacia PC1 positivo; Subtipo4 (morado) forma una masa densa en la parte inferior; Mieloide (azul) es un grupo pequeño y espacialmente diferenciado. La separación es real pero no nítida — coherente con el conocido continuo biológico de los patotipos de AR.
+**PCA:** Fibroide (rojo) se concentra en el cuadrante superior-izquierdo; Linfoide (verde) forma un bloque compacto en la parte inferior; IFN-high (morado) se extiende hacia PC1 positivo; el cluster Vascular-Estromal (azul) ocupa la región central.
 
-**Lectura del Mapa de Difusión:** La geometría no lineal revela una **trayectoria diagonal llamativa para Subtipo4**, lo que sugiere que representa un estado continuo más que un subtipo discreto. Las muestras Fibroides se distribuyen a lo largo de un brazo separado. Mieloide aparece casi aislado, indicando una alta especificidad transcriptómica a pesar de su pequeño tamaño.
+**Mapa de Difusión:** IFN-high (morado) ocupa la zona superior-izquierda con DC2 elevado, revelando una rama propia en el espacio no lineal. Linfoide forma el cluster más compacto en el extremo inferior-izquierdo. La geometría confirma que IFN-high y Fibroide tienen trayectorias topológicas independientes.
 
 ---
 
-## Los cuatro patotipos — Interpretación a nivel de cluster
+## Los cuatro patotipos — Interpretación biológica
 
 ### 🔴 Fibroide
 
-El cluster Fibroide es el segundo más grande y muestra la composición más compleja en la matriz de confusión: ~48% de sus muestras provienen de tejido histológico Fibroide, pero ~33% proceden del histológico Mieloide. Esta mezcla indica que a nivel transcriptómico, los programas estromal e inflamatorio innato coexisten en una fracción sustancial de muestras.
+El cluster Fibroide alcanza una pureza del **72%** respecto al patotipo histológico (frente al 48% en k=4). Sus marcadores DEG están dominados por **genes HLA de clase II** (HLA-DRA, HLA-DMB, HLA-DPB1, HLA-DPA1) y queratinas (KRT5, KRT14).
 
-**Principales marcadores DEG (sobreexpresados):** *PRKAR2B, MTURN, GSN, MAOA, CD74, HLA-DRA, HLA-DMB, HLA-DPB1, HLA-DPA1*
+La sobreexpresión de **HLA clase II** indica que los fibroblastos sinoviales (FLS) en este estado participan activamente en la **presentación de antígenos a linfocitos T CD4⁺**, difuminando la frontera clásica entre funciones estromales e inmunes. La presencia de **KRT5 y KRT14** en FLS ha sido documentada en subtipos específicos de la membrana sinovial lining y puede reflejar un fenotipo de diferenciación particular.
 
-La prevalencia de **genes HLA de clase II** (HLA-DRA, HLA-DMB, HLA-DPB1, HLA-DPA1) es biológicamente informativa: son las moléculas del complejo mayor de histocompatibilidad responsables de la presentación de antígenos a los linfocitos T CD4⁺. Su sobreexpresión en el cluster Fibroide puede reflejar que los fibroblastos sinoviales (FLS) en este estado participan activamente en la presentación local de antígenos, difuminando la frontera entre funciones estromales e inmunes. *GSN* (gelsolina, proteína de remodelación de actina) y *MAOA* (monoaminooxidasa A) apuntan a la dinámica del citoesqueleto y a componentes neuroinflamatorios.
-
-<img src="results/figures/boxplots_markers_Fibroid.png" width="900"/>
+<img src="results_k5/results/figures/boxplots_markers_Fibroid.png" width="900"/>
 
 ---
 
-### 🔵 Mieloide
+### 🔵 Vascular-Estromal *(denominado "Myeloid" por el anotador automático)*
 
-El cluster Mieloide es el más pequeño en número de muestras (~10), lo cual es la razón principal por la que solo se recuperó un gen DEG estadísticamente significativo tras el análisis DESeq2 uno-contra-resto. A pesar de su tamaño, el **60% de sus muestras proceden de tejido histológico Mieloide** — la mayor pureza de patotipo entre los cuatro clusters.
+Este es el hallazgo más inesperado del análisis. Aunque el algoritmo de anotación lo denomina "Myeloid" por proceso de eliminación al comparar con firmas génicas conocidas, los DEGs revelan una **firma endotelial/vascular inequívoca**:
 
-**Principal marcador DEG:** *ZFP36L1* — una proteína de unión a ARN que desestabiliza ARNm proinflamatorios (TNF, IL-6). Su infraexpresión en las muestras Mieloides sugiere un deterioro del amortiguamiento post-transcripcional de las señales inflamatorias, coherente con el estado de macrófago hiperactivado característico del patotipo Mieloide.
+| Gen UP | Función | Tipo celular |
+|--------|---------|-------------|
+| **EMCN** | Endomucina — marcador histológico exclusivo de endotelio vascular | Endotelio |
+| **JAM2** | Molécula de adhesión de uniones estrechas endoteliales | Endotelio |
+| **AQP1** | Canal de agua en microvasculatura sinovial | Endotelio / FLS |
+| **SPARCL1** | Glicoproteína matricelular reguladora de angiogénesis | Endotelio / estroma |
+| **PKN3** | Quinasa pro-angiogénica (vía VEGF) | Endotelio |
+| **TRPC1** | Canal de calcio endotelial | Endotelio |
+| **TNFRSF11B** | OPG — regula RANKL/osteoclastogénesis, producida en endotelio | Endotelio / FLS |
 
-**Característica notable — TNNC1 y CRYAB:** En el boxplot de marcadores de Subtipo4, *TNNC1* (troponina C1) y *CRYAB* (αB-cristalina) aparecen dramáticamente elevados específicamente en las muestras Mieloides. Ambas son proteínas de respuesta al estrés expresadas en fibroblastos bajo estrés mecánico o térmico, y CRYAB tiene roles documentados en la supervivencia de macrófagos. Su alta expresión aquí puede reflejar co-activación de fibroblastos sinoviales dentro de biopsias Mieloides, o una subpoblación adaptada al estrés.
+**¿Por qué es histológicamente mixto (43% Mieloide, 33% Linfoide, 24% Fibroide)?** Porque el endotelio vascular está presente en *todos* los patotipos. Las biopsias donde la señal endotelial domina sobre el infiltrado inmune caen en este cluster independientemente de su clasificación histológica. Esto sugiere que la **remodelación vascular/angiogénesis** representa un eje de variación transcriptómica independiente de los patotipos clásicos, no capturado por la clasificación histológica actual.
 
-<img src="results/figures/boxplots_markers_Myeloid.png" width="480"/>
+<img src="results_k5/results/figures/boxplots_markers_Myeloid.png" width="900"/>
 
 ---
 
 ### 🟢 Linfoide
 
-El cluster Linfoide logra el mayor solapamiento con un único patotipo: **el 70% de sus muestras proceden de tejido histológico Linfoide**. Su perfil DEG se centra en proteínas ribosomales (*RPL28, RPS19*) y componentes de la matriz extracelular (*LAMB2*).
+El cluster Linfoide alcanza **79% de pureza** histológica. Sus marcadores (RPL28, RPS19, LAMB2) apuntan a **linfocitos transcricionalmente muy activos**. La sobreexpresión de proteínas ribosomales es coherente con linfocitos en expansión dentro de **agregados linfoides terciarios**, estructuras bien documentadas en el sinovio de AR que sostienen respuestas autoinmunes locales.
 
-La sobreexpresión de **proteínas ribosomales** en el cluster Linfoide no es trivial. Los linfocitos activados y en expansión — como ocurre en las estructuras similares a centros germinales del sinovio en AR — incrementan dramáticamente la maquinaria traduccional para sostener la rápida proliferación y la producción de anticuerpos y citocinas. Esta firma transcripcional se alinea con la biología conocida de los agregados linfoides (AL) en el sinovio de AR.
-
-*LAMB2* (subunidad beta-2 de laminina) es un componente estructural de las membranas basales. Su expresión diferencial entre Linfoide y otros clusters puede reflejar la remodelación vascular necesaria para mantener la organización de los agregados linfoides.
-
-<img src="results/figures/boxplots_markers_Lymphoid.png" width="700"/>
+<img src="results_k5/results/figures/boxplots_markers_Lymphoid.png" width="700"/>
 
 ---
 
-### 🟣 Subtipo4 — Un candidato a subdivisión linfoide
+### 🟣 IFN-high — Patotipo con relevancia terapéutica directa
 
-Subtipo4 es el cluster más grande y el resultado biológicamente más inesperado de este análisis. Su perfil en la matriz de confusión refleja al Linfoide: **el 70,9% de sus muestras llevan etiquetas histológicas Linfoides**, casi idéntico al cluster Linfoide. Sin embargo, su perfil de expresión génica es fundamentalmente diferente.
+**IFN-high es el hallazgo más clínicamente relevante.** El hecho de que un algoritmo no supervisado lo separe del Linfoide — siendo histológicamente idénticos (72% vs 79% Linfoide histológico) — valida tanto la existencia biológica del patotipo como la capacidad del pipeline.
 
-**Principales marcadores DEG (sobreexpresados):** *CD163, PLXNB2, HSP90B1, ADIRF, TPP1*  
-**Principales marcadores DEG (infraexpresados):** *TNNC1, CRYAB*
+**Perfil clínico** (metadatos STRAP, n=39):
+- **66.7% RF positivo** — mayor seropositividad de todos los clusters
+- **CRP media 28.5 mg/L** — inflamación sistémica elevada
+- **82.1% femenino** — demografía AR típica
 
-*CD163* es un receptor scavenger y marcador definitivo de macrófagos activados de forma alternativa (tipo M2). Su sobreexpresión posiciona a Subtipo4 como enriquecido en **actividad macrofágica inmunosupresora o antiinflamatoria**, en contraste con el sesgo proinflamatorio esperado en las muestras Mieloides canónicas.
+Este perfil coincide exactamente con lo descrito en la literatura: pacientes **seropositivos, con mayor inflamación**, y con mejor respuesta documentada a **baricitinib** (JAK1/2) y **abatacept**, y potencial resistencia a anti-TNF *(Boyle et al. 2021, Ann Rheum Dis)*.
 
-*PLXNB2* (Plexina B2) media la quimiotaxis de células inmunes y se expresa en células dendríticas y macrófagos durante la vigilancia tisular. *HSP90B1* (GRP94) es una chaperona del retículo endoplasmático crítica para las proteínas de la vía secretora, incluyendo los complejos MHC de clase I/II — lo que apunta a una maquinaria de procesamiento de antígenos activa.
-
-**Interpretación:** Subtipo4 puede representar un **estado sinovial rico en linfoides dominado por macrófagos reguladores o activados de forma alternativa**, más que el programa inmune clásicamente citotóxico o efector del cluster Linfoide. Si se valida, esta distinción tendría implicaciones terapéuticas: las estrategias antiinflamatorias convencionales podrían comportarse de forma diferente en estos dos subgrupos histológicamente indistinguibles pero transcriptómicamente separables.
-
-<img src="results/figures/boxplots_markers_Subtype4.png" width="800"/>
+<img src="results_k5/results/figures/boxplots_markers_IFN_high.png" width="700"/>
 
 ---
 
@@ -109,94 +107,78 @@ Subtipo4 es el cluster más grande y el resultado biológicamente más inesperad
 
 ### Matriz de confusión
 
-La matriz de confusión cuantifica, para cada cluster predicho, qué fracción de sus muestras procede de cada patotipo histológico.
+<img src="results_k5/results/figures/confusion_pct.png" width="600"/>
 
-<img src="results/figures/confusion_pct.png" width="600"/>
+### Diagrama de Sankey
 
-Observaciones clave:
-- Cluster **Linfoide**: 70% Linfoide histológico → mayor pureza, recuperación biológica más sólida
-- Cluster **Mieloide**: 60% Mieloide histológico → alta pureza, pero cluster muy pequeño
-- **Subtipo4**: 70,9% Linfoide histológico → subgrupo transcriptómicamente distinto dentro de la categoría Linfoide
-- **Fibroide**: 48,3% Fibroide histológico → cluster más heterogéneo; estado estromal-inmune mixto
+<img src="results_k5/results/figures/sankey.png" width="800"/>
 
-### Diagrama de Sankey — Flujo de muestras entre predicción y diagnóstico
-
-<img src="results/figures/sankey.png" width="800"/>
-
-El diagrama de Sankey hace el flujo entre clusters inmediatamente legible. La característica más notable es el **doble flujo desde el Linfoide histológico** hacia los clusters verde (Linfoide) y morado (Subtipo4) — evidencia visual directa de la subdivisión linfoide propuesta. La banda Mieloide a la izquierda es delgada, reflejando su pequeño tamaño, pero su flujo se concentra hacia el Mieloide histológico a la derecha.
+El Sankey visualiza el **doble flujo desde el Linfoide histológico** hacia los clusters Linfoide e IFN-high — evidencia directa de que el transcriptoma separa dos estados que la histología colapsa en uno. Este es el resultado central del análisis.
 
 ---
 
 ## Heatmap — Estructura global de expresión
 
-<img src="results/figures/heatmap_clusters.png" width="900"/>
-
-El heatmap de los genes más variables por patotipo confirma una estructura en bloques: las columnas (muestras) se agrupan por patotipo con separaciones visibles en la barra de color. El patrón más prominente es una **franja cálida en las muestras Mieloides**, correspondiente a un pequeño conjunto de genes altamente específicos de este cluster. Los bloques Fibroide y Subtipo4 son grandes pero relativamente uniformes, coherente con su presencia dominante en el dataset.
+<img src="results_k5/results/figures/heatmap_clusters.png" width="900"/>
 
 ---
 
 ## Comparación de métodos de clustering
 
-Se evaluaron ocho algoritmos sobre la misma matriz de expresión normalizada con VST y escalada con z-score. Se utilizaron dos métricas independientes:
+<table>
+<tr>
+<th align="center">Silhouette score (validez interna)</th>
+<th align="center">Bootstrap ARI (estabilidad)</th>
+</tr>
+<tr>
+<td><img src="results_k5/results/figures/silhouette_comparison.png" width="480"/></td>
+<td><img src="results_k5/results/figures/bootstrap_stability.png" width="480"/></td>
+</tr>
+</table>
 
-### Validez interna: Silhouette score
+| Método | Silhouette (k=5) | Veredicto |
+|--------|-----------------|-----------|
+| **K-means** | **0.156** | ✅ Mejor separación interna |
+| Jerárquico | 0.150 | ✅ Segundo más sólido |
+| Infomap | 0.084 | Moderado |
+| Espectral | 0.082 | Moderado |
+| Leiden | 0.067 | Genera clusters adicionales |
+| Louvain | 0.054 | Genera clusters adicionales |
+| MCL | 0.015 | Separación casi aleatoria |
+| Consensus | 0.003 | Inestable con clusters pequeños |
 
-<img src="results/figures/silhouette_comparison.png" width="750"/>
-
-### Estabilidad externa: ARI Bootstrap (Índice de Rand Ajustado)
-
-<img src="results/figures/bootstrap_stability.png" width="750"/>
-
-| Método | Silhouette | ARI Bootstrap | Veredicto |
-|--------|-----------|--------------|-----------|
-| **K-means** | **0,19** | **0,829** | ✅ Mejor en general — alta estabilidad, mayor silhouette |
-| Jerárquico | 0,168 | 0,655 | ✅ Segundo más sólido |
-| Espectral | 0,138 | 0,528 | Moderado |
-| Leiden | 0,094 | 0,633 | Método de grafo, estabilidad aceptable |
-| Infomap | 0,084 | 0,491 | Límite |
-| Consensus | 0,073 | — | Por debajo de lo esperado; los clusters pequeños afectan a la convergencia |
-| Louvain | 0,054 | 0,528 | Genera clusters extra más allá de k=4 |
-| MCL | 0,015 | 0,582 | Separación casi aleatoria para estos datos |
-
-**Por qué gana K-means:** Los datos transcriptómicos, preprocesados en el espacio PCA tras la normalización VST, tienen una **geometría aproximadamente euclídea** que favorece los métodos basados en centroides. Los métodos de grafo (Leiden, Louvain, MCL) están diseñados para datos con estructura de variedad (*manifold*) como el RNA-seq de célula única, y tienen un rendimiento inferior en matrices de RNA-seq masivo donde los grafos de vecindad local son menos informativos.
-
-El **ARI bootstrap de 0,829** para K-means significa que cuando el mismo algoritmo se re-ejecuta sobre submuestras del 80% de los datos, las particiones resultantes concuerdan con la solución completa el 83% de las veces (por concordancia corregida por azar). Es un resultado sólido que justifica usar K-means como solución de referencia.
+**Los métodos de grafo (Leiden, Louvain, Infomap, MCL) producen muestras "Unresolved"** — asignan algunas muestras a comunidades adicionales más allá de k. Esto confirma que estos métodos, diseñados para datos single-cell con topología de variedad no lineal, no son apropiados para bulk RNA-seq de tejido complejo donde la geometría es esencialmente euclídea.
 
 ---
 
 ## Una reflexión sobre la continuidad biológica
 
-Un silhouette score de 0,19, siendo el mejor entre todos los métodos, sigue siendo bajo en términos absolutos. Esto es esperado y biológicamente significativo: **los patotipos sinoviales de AR no son entidades moleculares discretas**. Cada biopsia contiene una mezcla heterogénea de tipos celulares, y el RNA-seq masivo mide un promedio poblacional. El clustering revela ejes transcriptómicos dominantes, pero los pacientes existen a lo largo de un continuo más que en categorías perfectamente delimitadas.
+Un silhouette de 0.156 es bajo en términos absolutos, pero **biológicamente esperado**: cada biopsia sinovial contiene mezcla de fibroblastos, macrófagos, linfocitos y células endoteliales. El clustering revela ejes transcriptómicos dominantes, no categorías perfectamente separadas.
 
-El descubrimiento de Subtipo4 como posible subdivisión Linfoide ilustra esto: la histología lo colapsa en la categoría Linfoide, pero el transcriptoma lo separa. Este hallazgo motiva trabajo futuro con resolución de célula única o transcriptómica espacial, donde la resolución a nivel de tipo celular podría resolver las interacciones macrófago-linfocito hipotetizadas en Subtipo4.
+La separación de IFN-high del Linfoide — histológicamente idénticos — ilustra precisamente el valor del enfoque no supervisado. Y la identificación del cluster Vascular-Estromal apunta a que la **angiogénesis sinovial** podría ser un eje de variación independiente no recogido en la clasificación histológica actual.
 
 ---
 
 ## Arquitectura del pipeline
 
-El análisis está implementado como un pipeline modular en R. Un único parámetro global (`k <- 4` en `STRAP_pipeline_main.R`) controla el número de patotipos en todos los pasos.
-
 ```
-STRAP_pipeline_main.R          ← Punto de entrada; todos los parámetros globales aquí
+STRAP_pipeline_main.R          ← Punto de entrada; cambiar k aquí
 functions/
-  00_setup.R                   ← Instalación de paquetes y creación de directorios de salida
-  01_preprocessing.R           ← Carga de conteos, normalización VST, escalado z-score
-  02_dimreduction.R            ← PCA (prcomp) + Mapas de Difusión (diffusionMap)
-  03_clustering.R              ← 8 algoritmos de clustering (modular, fácilmente extensible)
-  04_validation.R              ← Silhouette + ARI bootstrap
-  05_annotation.R              ← Firmas génicas de AR → nombrado automático de patotipos
-  06_visualization.R           ← Todas las figuras (ggplot2, pheatmap, ggalluvial)
-  07_deg_analysis.R            ← DESeq2 uno-contra-resto; tablas UP/DOWN separadas por cluster
-  08_export.R                  ← Exportación organizada a results/
-results/
-  figures/                     ← 21 figuras listas para publicación (PNG, 300 ppp)
-  tables/                      ← Asignaciones de clusters, ranking de validación
-  DEGs/                        ← Genes sobre- e infraexpresados por patotipo
-  clusters/                    ← Vectores de clusters + gráficos de consensus
-  validation/                  ← Resultados de bootstrap y silhouette
+  00_setup.R                   ← Instalación de paquetes
+  01_preprocessing.R           ← Carga de conteos, VST, z-score
+  02_dimreduction.R            ← PCA + Mapas de Difusión
+  03_clustering.R              ← 8 algoritmos de clustering (modular)
+  04_validation.R              ← Silhouette + bootstrap ARI
+  05_annotation.R              ← Firmas AR → nombrado automático
+  06_visualization.R           ← 22 figuras (ggplot2, pheatmap, ggalluvial)
+  07_deg_analysis.R            ← DESeq2 uno-contra-resto; tablas UP/DOWN
+  08_export.R                  ← Exportación organizada
+results_k4/                    ← Resultados con k=4
+results_k5/                    ← Resultados con k=5 (solución principal)
+subtype4_clinical_check.R      ← Validación clínica del cluster artefacto
 ```
 
-Para reproducir el análisis completo, abre `STRAP_pipeline_main.R` en RStudio y pulsa **Source**. El directorio de trabajo se establece automáticamente.
+Cada valor de k guarda sus resultados en carpeta independiente. Para reproducir el análisis completo, abrir `STRAP_pipeline_main.R` en RStudio y pulsar **Source**.
 
 ---
 
@@ -204,14 +186,14 @@ Para reproducir el análisis completo, abre `STRAP_pipeline_main.R` en RStudio y
 
 - **Cohorte:** STRAP (*Stratification of Biologic Therapies for RA by Pathobiology*)
 - **Acceso:** ArrayExpress [E-MTAB-13733](https://www.ebi.ac.uk/biostudies/arrayexpress/studies/E-MTAB-13733)
-- **Tipo de datos:** RNA-seq masivo, biopsias de tejido sinovial
-- **Referencia histológica:** Etiquetas de patotipo Fibroide, Mieloide y Linfoide de los metadatos SDRF asociados
+- **Tipo de datos:** Bulk RNA-seq, biopsias de tejido sinovial
+- **n:** ~206 muestras con metadatos clínicos completos
 
 ---
 
 ## Dependencias
 
-R ≥ 4.4. Paquetes principales: `DESeq2`, `ConsensusClusterPlus`, `clusterProfiler`, `igraph`, `kernlab`, `diffusionMap`, `MCL`, `ggplot2`, `ggalluvial`, `pheatmap`, `mclust`. La lista completa se gestiona automáticamente mediante `functions/00_setup.R`.
+R ≥ 4.4. Paquetes principales: `DESeq2`, `ConsensusClusterPlus`, `igraph`, `kernlab`, `diffusionMap`, `MCL`, `ggplot2`, `ggalluvial`, `pheatmap`, `mclust`. Gestionados automáticamente por `functions/00_setup.R`.
 
 ---
 

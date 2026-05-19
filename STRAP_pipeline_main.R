@@ -27,7 +27,7 @@
 # ==============================================================================
 
 # ── Parámetro central ─────────────────────────────────────────────────────────
-k <- 4        # <── CAMBIA SOLO ESTE VALOR. Todo lo demás se adapta solo.
+k <- 5        # <── CAMBIA SOLO ESTE VALOR. Todo lo demás se adapta solo.
 
 # ── Reproducibilidad ──────────────────────────────────────────────────────────
 GLOBAL_SEED    <- 42
@@ -76,8 +76,7 @@ PATHOTYPE_COLORS <- c(
 )
 
 # ── Rutas de datos ────────────────────────────────────────────────────────────
-# ── Rutas de datos ────────────────────────────────────────────────────────────
-BASE_DIR  <- "."
+BASE_DIR  <- paste0("results_k", k)   # cada k guarda en su propia carpeta
 DATA_FILE <- "C:/Users/Paula/Desktop/bioinformatica/TFM/codigo/Unsupervised-classification-of-synovial-tissue-pathotypes/strap_counts.RData"
 META_FILE <- "C:/Users/Paula/Desktop/bioinformatica/TFM/codigo/Unsupervised-classification-of-synovial-tissue-pathotypes/E-MTAB-13733.sdrf.txt"
 
