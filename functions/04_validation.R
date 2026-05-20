@@ -88,9 +88,9 @@ run_validation <- function(expr, clusters, meta, k,
     hierarchical = function(e, k, seed) cluster_hierarchical(e, k, seed),
     spectral     = function(e, k, seed) cluster_spectral(e, k, seed),
     leiden       = function(e, k, seed) cluster_leiden(e, k, seed),
-    louvain      = function(e, k, seed) cluster_louvain(e, k, seed),
-    infomap      = function(e, k, seed) cluster_infomap(e, k, seed),
-    mcl          = function(e, k, seed) cluster_mcl(e, k, seed)
+    mcl          = function(e, k, seed) cluster_mcl(e, k, seed),
+    nmf          = function(e, k, seed) cluster_nmf(e, k, seed),
+    gmm          = function(e, k, seed) cluster_gmm(e, k, seed)
   )
 
   methods_avail <- names(clusters)

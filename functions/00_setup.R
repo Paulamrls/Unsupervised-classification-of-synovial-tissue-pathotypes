@@ -23,10 +23,11 @@ REQUIRED_CRAN <- c(
   "ggalluvial",    # sankey en ggplot2
   "viridis",       # paletas perceptualmente uniformes
   "boot",          # bootstrap
-  "mclust",        # adjustedRandIndex
+  "mclust",        # adjustedRandIndex + GMM clustering
   "kernlab",       # Spectral clustering (specc)
   "diffusionMap",  # Diffusion Maps (alternativa a destiny, compatible con R 4.5)
-  "reshape2"       # melt para boxplots de marcadores
+  "reshape2",      # melt para boxplots de marcadores
+  "NMF"            # Non-negative Matrix Factorization (bulk RNA-seq)
 )
 
 REQUIRED_BIOC <- c(

@@ -3,14 +3,16 @@
 # Todos los métodos de clustering — arquitectura modular para añadir más fácilmente
 # ==============================================================================
 # MÉTODOS IMPLEMENTADOS:
-#   kmeans      — K-means clásico
+#   kmeans       — K-means clásico
 #   hierarchical — Ward D2 jerárquico
-#   spectral    — Spectral clustering
-#   consensus   — ConsensusClusterPlus (reproducible con seed)
-#   leiden      — Leiden (detección de comunidades en grafo)
-#   louvain     — Louvain (detección de comunidades en grafo)
-#   infomap     — Infomap (flujo de información en grafo)
-#   mcl         — Markov Clustering (MCL)
+#   spectral     — Spectral clustering
+#   consensus    — ConsensusClusterPlus (reproducible con seed)
+#   leiden       — Leiden (detección de comunidades en grafo)
+#   mcl          — Markov Clustering (MCL)
+#   nmf          — NMF: descompone en k programas transcriptómicos (metagenes)
+#                  → especialmente adecuado para bulk RNA-seq (señales mixtas)
+#   gmm          — GMM: mezcla de k gaussianas multivariantes sobre PCA
+#                  → clustering probabilístico con base estadística formal
 #
 # ESTRUCTURA MODULAR: Para añadir un nuevo método, añade una función
 #   cluster_METODO(expr, k, seed, ...) que devuelva un vector integer con
@@ -139,31 +141,55 @@ cluster_leiden <- function(expr, k, seed = 42, k_nn = 10, resolution = 1.0) {
   return(cl)
 }
 
-# ── Louvain ───────────────────────────────────────────────────────────────────
-# IMPORTANTE: llamada explícita igraph::cluster_louvain para evitar recursión
-# con esta misma función.
-cluster_louvain <- function(expr, k, seed = 42, k_nn = 10) {
+# ── NMF (Non-negative Matrix Factorization) ───────────────────────────────────
+# Descompone la matriz de expresión en k programas transcriptómicos (metagenes).
+# Cada muestra queda descrita por su peso en cada metagén; el cluster asignado
+# es el metagén dominante.
+# Especialmente apropiado para bulk RNA-seq: captura señales mixtas de tipos
+# celulares que coexisten en la misma biopsia.
+# NOTA: nrun iteraciones para seleccionar la mejor solución — puede ser lento.
+cluster_nmf <- function(expr, k, seed = 42, nrun = 20) {
   set.seed(seed)
-  g      <- build_knn_graph(expr, k_nn = k_nn, seed = seed)
-  cl_raw <- igraph::cluster_louvain(g)
-  cl_vec <- as.integer(igraph::membership(cl_raw))
+
+  # NMF requiere valores no negativos
+  # Desplazar la matriz z-score: sumar |min| para que el mínimo sea 0
+  expr_nn <- expr - min(expr)
+
+  # NMF espera genes × muestras → transponer
+  res <- NMF::nmf(t(expr_nn), rank = k, nrun = nrun, seed = seed,
+                   .options = "-v")   # sin verbose
+
+  # Asignación: metagén de mayor peso para cada muestra
+  cl_vec <- as.integer(NMF::predict(res, what = "samples"))
   cl     <- setNames(normalize_clusters(cl_vec), rownames(expr))
-  cat(sprintf("    Louvain: %d clusters -> tabla = %s\n",
-              length(unique(cl)),
+
+  cat(sprintf("    NMF (k=%d, nrun=%d): tabla = %s\n", k, nrun,
               paste(names(table(cl)), table(cl), sep = ":", collapse = " | ")))
   return(cl)
 }
 
-# ── Infomap ───────────────────────────────────────────────────────────────────
-# IMPORTANTE: llamada explícita igraph::cluster_infomap para evitar recursión.
-cluster_infomap <- function(expr, k, seed = 42, k_nn = 10) {
+# ── GMM (Gaussian Mixture Models) ─────────────────────────────────────────────
+# Ajusta una mezcla de k gaussianas multivariantes sobre los primeros PCs.
+# La reducción PCA previa es necesaria: mclust no escala bien en alta dimensión
+# (1000 genes). Con 30 PCs capturamos la mayor parte de la varianza estructural.
+cluster_gmm <- function(expr, k, seed = 42, n_pcs = 30) {
   set.seed(seed)
-  g      <- build_knn_graph(expr, k_nn = k_nn, seed = seed)
-  cl_raw <- igraph::cluster_infomap(g)
-  cl_vec <- as.integer(igraph::membership(cl_raw))
-  cl     <- setNames(normalize_clusters(cl_vec), rownames(expr))
-  cat(sprintf("    Infomap: %d clusters -> tabla = %s\n",
-              length(unique(cl)),
+
+  # Reducción dimensional previa (expr ya está centrado/escalado)
+  pca    <- prcomp(expr, center = FALSE, scale. = FALSE)
+  n_use  <- min(n_pcs, ncol(pca$x), nrow(expr) - 1)
+  expr_pc <- pca$x[, seq_len(n_use), drop = FALSE]
+
+  res <- mclust::Mclust(expr_pc, G = k, verbose = FALSE)
+
+  if (is.null(res)) {
+    warning("GMM no convergió para k=", k, ". Devolviendo NULL.")
+    return(NULL)
+  }
+
+  cl <- setNames(as.integer(res$classification), rownames(expr))
+  cat(sprintf("    GMM (k=%d, modelo=%s, PCs=%d): tabla = %s\n",
+              k, res$modelName, n_use,
               paste(names(table(cl)), table(cl), sep = ":", collapse = " | ")))
   return(cl)
 }
@@ -227,20 +253,21 @@ run_all_clustering <- function(expr, k, seed = 42,
     cluster_leiden(expr, k, seed, graph_k_nn, graph_res),
     error = function(e) { warning("Leiden falló: ", e$message); NULL })
 
-  cat("  → Louvain\n")
-  results$louvain      <- tryCatch(
-    cluster_louvain(expr, k, seed, graph_k_nn), error = function(e) {
-      warning("Louvain falló: ", e$message); NULL })
-
-  cat("  → Infomap\n")
-  results$infomap      <- tryCatch(
-    cluster_infomap(expr, k, seed, graph_k_nn), error = function(e) {
-      warning("Infomap falló: ", e$message); NULL })
-
   cat("  → MCL\n")
   results$mcl          <- tryCatch(
     cluster_mcl(expr, k, seed, graph_k_nn), error = function(e) {
       warning("MCL falló: ", e$message); NULL })
+
+  # ── Métodos específicos para bulk RNA-seq ─────────────────────────────────
+  cat("  → NMF (puede tardar unos minutos)\n")
+  results$nmf          <- tryCatch(
+    cluster_nmf(expr, k, seed), error = function(e) {
+      warning("NMF falló: ", e$message); NULL })
+
+  cat("  → GMM\n")
+  results$gmm          <- tryCatch(
+    cluster_gmm(expr, k, seed), error = function(e) {
+      warning("GMM falló: ", e$message); NULL })
 
   # Eliminar métodos que fallaron
   results <- Filter(Negate(is.null), results)
