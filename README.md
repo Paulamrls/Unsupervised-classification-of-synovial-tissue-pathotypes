@@ -136,18 +136,20 @@ El Sankey visualiza el **doble flujo desde el Linfoide histológico** hacia los 
 </tr>
 </table>
 
-| Método | Silhouette (k=5) | Veredicto |
-|--------|-----------------|-----------|
-| **K-means** | **0.156** | ✅ Mejor separación interna |
-| Jerárquico | 0.150 | ✅ Segundo más sólido |
-| Infomap | 0.084 | Moderado |
-| Espectral | 0.082 | Moderado |
-| Leiden | 0.067 | Genera clusters adicionales |
-| Louvain | 0.054 | Genera clusters adicionales |
-| MCL | 0.015 | Separación casi aleatoria |
-| Consensus | 0.003 | Inestable con clusters pequeños |
+| Método | Silhouette (k=5) | Bootstrap ARI | Veredicto |
+|--------|-----------------|---------------|-----------|
+| **K-means** | **0.156** | **0.786** | ✅ Mejor en separación y estabilidad |
+| Jerárquico | 0.150 | 0.632 | ✅ Segundo más sólido |
+| Espectral | 0.082 | 0.686 | Moderado |
+| Leiden | 0.067 | 0.563 | Genera clusters adicionales |
+| NMF | 0.062 | 0.282 | Inestable — baja reproducibilidad bootstrap |
+| GMM | 0.048 | 0.128 | Inestable — insuficientes muestras para gaussianas |
+| MCL | 0.015 | 0.582 | Separación casi aleatoria |
+| Consensus | 0.003 | — | Inestable con clusters pequeños |
 
-**Los métodos de grafo (Leiden, Louvain, Infomap, MCL) producen muestras "Unresolved"** — asignan algunas muestras a comunidades adicionales más allá de k. Esto confirma que estos métodos, diseñados para datos single-cell con topología de variedad no lineal, no son apropiados para bulk RNA-seq de tejido complejo donde la geometría es esencialmente euclídea.
+Se compararon métodos clásicos (K-means, jerárquico, spectral, consensus), basados en grafos (Leiden, MCL) y específicos para datos de expresión génica bulk (NMF, GMM). **K-means es el único método que combina alta separación interna (silhouette 0.156) con alta estabilidad bootstrap (ARI 0.786)**, siendo seleccionado como método definitivo.
+
+La baja estabilidad de NMF (ARI=0.282) indica que la variación transcriptómica en biopsias sinoviales forma estados discretos robustos más que un continuo de programas superpuestos — lo que justifica retrospectivamente el uso de clustering duro. Los métodos de grafo (Leiden, MCL) producen muestras "Unresolved", confirmando que bulk RNA-seq sinovial tiene geometría esencialmente euclídea, sin la topología de variedad no lineal de datos single-cell.
 
 ---
 
