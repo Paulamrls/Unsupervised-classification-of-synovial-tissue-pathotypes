@@ -20,12 +20,12 @@ El pipeline compara **8 métodos de clustering** — métodos clásicos (K-means
 | Patotipo | Color | n | Biología dominante | Pureza histológica |
 |----------|-------|---|-------------------|-------------------|
 | **Fibroide** | 🔴 | 18 | Activación estromal, presentación antigénica HLA, FLS KRT⁺ | 72% Fibroide |
-| **Vascular-Estromal** | 🔵 | 67 | EMCN⁺ JAM2⁺ AQP1⁺ — firma endotelial/angiogénica | 43% Mieloide, mixto |
+| **Vascular** | 🟠 | 67 | EMCN⁺ JAM2⁺ AQP1⁺ SPARCL1⁺ — firma endotelial/angiogénica | 43% Mieloide, mixto |
 | **Linfoide** | 🟢 | 77 | Linfocitos activos (RPL28, RPS19), agregados linfoides | 79% Linfoide |
 | **IFN-high** ⭐ | 🟣 | 39 | Respuesta interferónica, RF⁺, implicaciones terapéuticas | 72% Linfoide |
-| ~~Subtype4~~ | 🟠 | 5 | ⚠️ Artefacto: contaminación muscular (TNNI1, NEB) en pacientes masculinos con CRP alta | — |
+| ~~Myeloid~~ | 🔵 | 5 | ⚠️ Artefacto: contaminación muscular (TNNI1, NEB) en pacientes masculinos con CRP alta | 60% Mieloide hist. |
 
-> **Nota sobre Subtype4:** El análisis clínico reveló 80% de pacientes masculinos (vs. 12–30% en el resto), CRP media 51.4 mg/L y expresión extrema de proteínas de músculo esquelético (TNNI1, NEB). Consistente con contaminación de tejido muscular adyacente en biopsias de pacientes masculinos con alta actividad inflamatoria periarticular. Excluido de la interpretación biológica principal.
+> **Nota sobre el cluster Myeloid (artefacto):** El análisis clínico reveló 80% de pacientes masculinos (vs. 12–30% en el resto), CRP media 51.4 mg/L y expresión extrema de proteínas de músculo esquelético (TNNI1, NEB). Consistente con contaminación de tejido muscular adyacente en biopsias de pacientes masculinos con alta actividad inflamatoria periarticular. Excluido de la interpretación biológica principal.
 
 ---
 
@@ -37,14 +37,14 @@ El pipeline compara **8 métodos de clustering** — métodos clásicos (K-means
 <th align="center">Mapa de Difusión — K-means (k=5)</th>
 </tr>
 <tr>
-<td><img src="results_k5/results/figures/pca_kmeans.png" width="480"/></td>
-<td><img src="results_k5/results/figures/diffusion_map.png" width="480"/></td>
+<td><img src="results_k5_v3/results/figures/pca_kmeans.png" width="480"/></td>
+<td><img src="results_k5_v3/results/figures/diffusion_map.png" width="480"/></td>
 </tr>
 </table>
 
-**PCA:** Fibroide (rojo) se concentra en el cuadrante superior-izquierdo; Linfoide (verde) forma un bloque compacto en la parte inferior; IFN-high (morado) se extiende hacia PC1 positivo; el cluster Vascular-Estromal (azul) ocupa la región central.
+**PCA:** Fibroide (rojo) se concentra en el cuadrante superior-izquierdo; Linfoide (verde) forma un bloque compacto en la parte inferior; IFN-high (morado) se extiende hacia PC1 positivo; Vascular (naranja) ocupa la región central con amplia dispersión; el cluster Myeloid (azul, n=5, artefacto) aparece como puntos aislados.
 
-**Mapa de Difusión:** IFN-high (morado) ocupa la zona superior-izquierda con DC2 elevado, revelando una rama propia en el espacio no lineal. Linfoide forma el cluster más compacto en el extremo inferior-izquierdo. La geometría confirma que IFN-high y Fibroide tienen trayectorias topológicas independientes.
+**Mapa de Difusión:** IFN-high (morado) ocupa la zona superior con DC2 elevado, revelando una rama propia en el espacio no lineal. Linfoide forma el cluster más compacto en el extremo inferior-izquierdo. La geometría confirma que IFN-high y Fibroide tienen trayectorias topológicas independientes.
 
 ---
 
@@ -56,13 +56,13 @@ El cluster Fibroide alcanza una pureza del **72%** respecto al patotipo histoló
 
 La sobreexpresión de **HLA clase II** indica que los fibroblastos sinoviales (FLS) en este estado participan activamente en la **presentación de antígenos a linfocitos T CD4⁺**, difuminando la frontera clásica entre funciones estromales e inmunes. La presencia de **KRT5 y KRT14** en FLS ha sido documentada en subtipos específicos de la membrana sinovial lining y puede reflejar un fenotipo de diferenciación particular.
 
-<img src="results_k5/results/figures/boxplots_markers_Fibroid.png" width="900"/>
+<img src="results_k5_v3/results/figures/boxplots_markers_Fibroid.png" width="900"/>
 
 ---
 
-### 🔵 Vascular-Estromal *(denominado "Myeloid" por el anotador automático)*
+### 🟠 Vascular
 
-Este es el hallazgo más inesperado del análisis. Aunque el algoritmo de anotación lo denomina "Myeloid" por proceso de eliminación al comparar con firmas génicas conocidas, los DEGs revelan una **firma endotelial/vascular inequívoca**:
+Este es el hallazgo más inesperado del análisis. A pesar de ser histológicamente mixto (43% Mieloide, 33% Linfoide, 24% Fibroide), los DEGs revelan una **firma endotelial/vascular inequívoca**:
 
 | Gen UP | Función | Tipo celular |
 |--------|---------|-------------|
@@ -76,7 +76,7 @@ Este es el hallazgo más inesperado del análisis. Aunque el algoritmo de anotac
 
 **¿Por qué es histológicamente mixto (43% Mieloide, 33% Linfoide, 24% Fibroide)?** Porque el endotelio vascular está presente en *todos* los patotipos. Las biopsias donde la señal endotelial domina sobre el infiltrado inmune caen en este cluster independientemente de su clasificación histológica. Esto sugiere que la **remodelación vascular/angiogénesis** representa un eje de variación transcriptómica independiente de los patotipos clásicos, no capturado por la clasificación histológica actual.
 
-<img src="results_k5/results/figures/boxplots_markers_Myeloid.png" width="900"/>
+<img src="results_k5_v3/results/figures/boxplots_markers_Vascular.png" width="900"/>
 
 ---
 
@@ -84,7 +84,7 @@ Este es el hallazgo más inesperado del análisis. Aunque el algoritmo de anotac
 
 El cluster Linfoide alcanza **79% de pureza** histológica. Sus marcadores (RPL28, RPS19, LAMB2) apuntan a **linfocitos transcricionalmente muy activos**. La sobreexpresión de proteínas ribosomales es coherente con linfocitos en expansión dentro de **agregados linfoides terciarios**, estructuras bien documentadas en el sinovio de AR que sostienen respuestas autoinmunes locales.
 
-<img src="results_k5/results/figures/boxplots_markers_Lymphoid.png" width="700"/>
+<img src="results_k5_v3/results/figures/boxplots_markers_Lymphoid.png" width="700"/>
 
 ---
 
@@ -99,7 +99,7 @@ El cluster Linfoide alcanza **79% de pureza** histológica. Sus marcadores (RPL2
 
 Este perfil coincide exactamente con lo descrito en la literatura: pacientes **seropositivos, con mayor inflamación**, y con mejor respuesta documentada a **baricitinib** (JAK1/2) y **abatacept**, y potencial resistencia a anti-TNF *(Boyle et al. 2021, Ann Rheum Dis)*.
 
-<img src="results_k5/results/figures/boxplots_markers_IFN_high.png" width="700"/>
+<img src="results_k5_v3/results/figures/boxplots_markers_IFN_high.png" width="700"/>
 
 ---
 
@@ -107,19 +107,19 @@ Este perfil coincide exactamente con lo descrito en la literatura: pacientes **s
 
 ### Matriz de confusión
 
-<img src="results_k5/results/figures/confusion_pct.png" width="600"/>
+<img src="results_k5_v3/results/figures/confusion_pct.png" width="600"/>
 
 ### Diagrama de Sankey
 
-<img src="results_k5/results/figures/sankey.png" width="800"/>
+<img src="results_k5_v3/results/figures/sankey.png" width="800"/>
 
-El Sankey visualiza el **doble flujo desde el Linfoide histológico** hacia los clusters Linfoide e IFN-high — evidencia directa de que el transcriptoma separa dos estados que la histología colapsa en uno. Este es el resultado central del análisis.
+El Sankey visualiza el **doble flujo desde el Linfoide histológico** hacia los clusters Linfoide e IFN-high — evidencia directa de que el transcriptoma separa dos estados que la histología colapsa en uno. Este es el resultado central del análisis. El cluster Vascular (naranja) recibe muestras de los tres patotipos histológicos, confirmando que la señal endotelial/angiogénica es transversal a la clasificación histológica.
 
 ---
 
 ## Heatmap — Estructura global de expresión
 
-<img src="results_k5/results/figures/heatmap_clusters.png" width="900"/>
+<img src="results_k5_v3/results/figures/heatmap_clusters.png" width="900"/>
 
 ---
 
@@ -131,8 +131,8 @@ El Sankey visualiza el **doble flujo desde el Linfoide histológico** hacia los 
 <th align="center">Bootstrap ARI (estabilidad)</th>
 </tr>
 <tr>
-<td><img src="results_k5/results/figures/silhouette_comparison.png" width="480"/></td>
-<td><img src="results_k5/results/figures/bootstrap_stability.png" width="480"/></td>
+<td><img src="results_k5_v3/results/figures/silhouette_comparison.png" width="480"/></td>
+<td><img src="results_k5_v3/results/figures/bootstrap_stability.png" width="480"/></td>
 </tr>
 </table>
 
@@ -176,7 +176,7 @@ functions/
   07_deg_analysis.R            ← DESeq2 uno-contra-resto; tablas UP/DOWN
   08_export.R                  ← Exportación organizada
 results_k4/                    ← Resultados con k=4
-results_k5/                    ← Resultados con k=5 (solución principal)
+results_k5_v3/                 ← Resultados con k=5 (solución principal, anotación corregida)
 subtype4_clinical_check.R      ← Validación clínica del cluster artefacto
 ```
 
