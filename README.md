@@ -9,7 +9,7 @@ La artritis reumatoide (AR) no es una enfermedad única — es un espectro de pa
 
 Sin embargo, la mayoría de estos estudios utilizan métodos supervisados o scoring de firmas génicas predefinidas. Este trabajo evalúa si métodos de clustering completamente **no supervisados** aplicados a datos bulk RNA-seq son capaces de recuperar esta estructura biológica de forma independiente, y qué métodos son más robustos para ello.
 
-El pipeline compara **8 métodos de clustering** (K-means, Jerárquico, Espectral, Consensus, Leiden, Louvain, Infomap, MCL), selecciona la solución más robusta mediante silhouette y bootstrap ARI, y caracteriza cada cluster a través de expresión diferencial, firmas génicas de AR y comparación con el diagnóstico histológico.
+El pipeline compara **8 métodos de clustering** — métodos clásicos (K-means, Jerárquico, Espectral, Consensus), basados en grafos (Leiden, MCL) y específicos para bulk RNA-seq (NMF, GMM) —, selecciona la solución más robusta mediante silhouette y bootstrap ARI, y caracteriza cada cluster a través de expresión diferencial, firmas génicas de AR y comparación con el diagnóstico histológico.
 
 ---
 
@@ -195,7 +195,7 @@ Cada valor de k guarda sus resultados en carpeta independiente. Para reproducir 
 
 ## Dependencias
 
-R ≥ 4.4. Paquetes principales: `DESeq2`, `ConsensusClusterPlus`, `igraph`, `kernlab`, `diffusionMap`, `MCL`, `ggplot2`, `ggalluvial`, `pheatmap`, `mclust`. Gestionados automáticamente por `functions/00_setup.R`.
+R ≥ 4.4. Paquetes principales: `DESeq2`, `ConsensusClusterPlus`, `igraph`, `kernlab`, `diffusionMap`, `MCL`, `NMF`, `mclust`, `ggplot2`, `ggalluvial`, `pheatmap`. Gestionados automáticamente por `functions/00_setup.R`.
 
 ---
 
