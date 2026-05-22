@@ -116,7 +116,7 @@ annotate_clusters <- function(clusters, expr, meta, k,
       hist_name <- histological_match[cl_char]
       max_pct   <- max(ct_pct[cl_char, ], na.rm = TRUE)
 
-      if (!is.na(hist_name) && max_pct >= 40 && !hist_name %in% used_names) {
+      if (!is.na(hist_name) && max_pct >= 50 && !hist_name %in% used_names) {
         labels[cl_char] <- hist_name
         used_names       <- c(used_names, hist_name)
       }
