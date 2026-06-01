@@ -27,7 +27,8 @@ REQUIRED_CRAN <- c(
   "kernlab",       # Spectral clustering (specc)
   "diffusionMap",  # Diffusion Maps (alternativa a destiny, compatible con R 4.5)
   "reshape2",      # melt para boxplots de marcadores
-  "NMF"            # Non-negative Matrix Factorization (bulk RNA-seq)
+  "NMF",           # Non-negative Matrix Factorization (bulk RNA-seq)
+  "enrichR"        # Enrichment analysis via Enrichr web API
 )
 
 REQUIRED_BIOC <- c(
