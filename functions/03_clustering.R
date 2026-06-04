@@ -148,22 +148,28 @@ cluster_leiden <- function(expr, k, seed = 42, k_nn = 10, resolution = 1.0) {
 # Especialmente apropiado para bulk RNA-seq: captura señales mixtas de tipos
 # celulares que coexisten en la misma biopsia.
 # NOTA: nrun iteraciones para seleccionar la mejor solución — puede ser lento.
-cluster_nmf <- function(expr, k, seed = 42, nrun = 20) {
+cluster_nmf <- function(expr, k, seed = 42, nrun = 5, n_genes = 200) {
   set.seed(seed)
 
+  # Reducir a los genes más variables antes de NMF (acelera enormemente)
+  # NMF con 1000 genes x nrun=20 puede tardar horas; con 200 genes x nrun=5 ~2 min
+  var_genes <- apply(expr, 2, var)
+  top_genes <- names(sort(var_genes, decreasing = TRUE))[seq_len(min(n_genes, ncol(expr)))]
+  expr_sub  <- expr[, top_genes, drop = FALSE]
+
   # NMF requiere valores no negativos
-  # Desplazar la matriz z-score: sumar |min| para que el mínimo sea 0
-  expr_nn <- expr - min(expr)
+  expr_nn <- expr_sub - min(expr_sub)
 
   # NMF espera genes × muestras → transponer
+  # method='lee' es significativamente más rápido que 'brunet' (default)
   res <- NMF::nmf(t(expr_nn), rank = k, nrun = nrun, seed = seed,
-                   .options = "-v")   # sin verbose
+                   method = "lee", .options = "-v")
 
   # Asignación: metagén de mayor peso para cada muestra
   cl_vec <- as.integer(NMF::predict(res, what = "samples"))
   cl     <- setNames(normalize_clusters(cl_vec), rownames(expr))
 
-  cat(sprintf("    NMF (k=%d, nrun=%d): tabla = %s\n", k, nrun,
+  cat(sprintf("    NMF (k=%d, nrun=%d, genes=%d): tabla = %s\n", k, nrun, n_genes,
               paste(names(table(cl)), table(cl), sep = ":", collapse = " | ")))
   return(cl)
 }

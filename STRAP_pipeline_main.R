@@ -107,9 +107,9 @@ source("functions/01_preprocessing.R")
 source("functions/02_dimreduction.R")
 source("functions/03_clustering.R")
 source("functions/04_validation.R")
-source("functions/05_annotation.R")
-source("functions/06_visualization.R")
-source("functions/07_deg_analysis.R")
+source("functions/05_deg_analysis.R")
+source("functions/06_annotation.R")
+source("functions/07_visualization.R")
 source("functions/08_export.R")
 
 # Cargar librerías y crear estructura de carpetas
@@ -209,53 +209,71 @@ final_clusters <- all_clusters[[best_method]]
 
 
 # ==============================================================================
-# 6. ANOTACIÓN BIOLÓGICA
+# 6. ANÁLISIS DE EXPRESIÓN DIFERENCIAL
+# ==============================================================================
+# Los DEGs se calculan ANTES de la anotación: los genes marcadores de cada
+# cluster informan directamente qué nombre biológico asignarle.
+# En este paso se usan IDs numéricos; se reetiquetan tras la anotación.
 # ==============================================================================
 
-cat("\n=== [5/8] ANOTACIÓN BIOLÓGICA ===\n")
+cat("\n=== [5/8] GENES DIFERENCIALES ===\n")
 
-annotation_res <- annotate_clusters(
-  clusters       = final_clusters,
+# Etiquetas numéricas temporales (la anotación biológica aún no existe)
+numeric_labels <- setNames(
+  as.character(sort(unique(final_clusters))),
+  as.character(sort(unique(final_clusters)))
+)
+
+deg_results_raw <- run_deg_analysis(
   expr           = expr_scaled,
-  meta           = meta_clean,
-  k              = k,
-  pathotype_order = PATHOTYPE_ORDER,
-  pathotype_colors = PATHOTYPE_COLORS,
+  expr_raw       = expr_raw,
+  clusters       = final_clusters,
+  cluster_labels = numeric_labels,
   n_markers      = N_TOP_MARKERS,
   seed           = GLOBAL_SEED
+)
+
+
+# ==============================================================================
+# 7. ANOTACIÓN BIOLÓGICA
+# ==============================================================================
+# La anotación usa las firmas de referencia + el solapamiento con patotipos
+# histológicos. Los DEGs calculados en el paso anterior respaldan y validan
+# el nombre asignado a cada cluster.
+# ==============================================================================
+
+cat("\n=== [6/8] ANOTACIÓN BIOLÓGICA ===\n")
+
+annotation_res <- annotate_clusters(
+  clusters         = final_clusters,
+  expr             = expr_scaled,
+  meta             = meta_clean,
+  k                = k,
+  pathotype_order  = PATHOTYPE_ORDER,
+  pathotype_colors = PATHOTYPE_COLORS,
+  n_markers        = N_TOP_MARKERS,
+  seed             = GLOBAL_SEED
 )
 
 # cluster_labels: vector nombrado cluster_id → nombre biológico
-cluster_labels  <- annotation_res$labels
-cluster_colors  <- annotation_res$colors   # colores consistentes
+cluster_labels <- annotation_res$labels
+cluster_colors <- annotation_res$colors
 cat("  Anotación:", paste(names(cluster_labels), "→", cluster_labels,
                            collapse = " | "), "\n")
 
-
-# ==============================================================================
-# 7. ANÁLISIS DE EXPRESIÓN DIFERENCIAL
-# ==============================================================================
-
-cat("\n=== [6/8] GENES DIFERENCIALES ===\n")
-
-deg_results <- run_deg_analysis(
-  expr           = expr_scaled,
-  expr_raw       = expr_raw,          # counts crudos para DESeq2
-  clusters       = final_clusters,
-  cluster_labels = cluster_labels,
-  n_markers      = N_TOP_MARKERS,
-  seed           = GLOBAL_SEED
-)
-
-# deg_results$up[[nombre_cluster]]   → genes upregulated
-# deg_results$down[[nombre_cluster]] → genes downregulated
+# Reetiqueta los DEGs con los nombres biológicos definitivos
+deg_results <- deg_results_raw
+names(deg_results$up)          <- cluster_labels[names(deg_results$up)]
+names(deg_results$down)        <- cluster_labels[names(deg_results$down)]
+names(deg_results$all)         <- cluster_labels[names(deg_results$all)]
+names(deg_results$top_markers) <- cluster_labels[names(deg_results$top_markers)]
 
 
 # ==============================================================================
 # 8. VISUALIZACIÓN
 # ==============================================================================
 
-cat("\n=== [7/8] VISUALIZACIÓN ===\n")
+cat("\n=== [7/8] VISUALIZACIÓN ===\n")  # 7: con clusters anotados + DEGs disponibles
 
 generate_all_plots(
   pca_res        = pca_res,
@@ -279,7 +297,7 @@ generate_all_plots(
 # 9. EXPORTACIÓN
 # ==============================================================================
 
-cat("\n=== [8/8] EXPORTACIÓN ===\n")
+cat("\n=== [8/8] EXPORTACIÓN ===\n")  # 8: exporta todo una vez el pipeline está completo
 
 export_all_results(
   all_clusters   = all_clusters,
