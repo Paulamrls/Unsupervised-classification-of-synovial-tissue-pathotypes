@@ -34,7 +34,7 @@ GLOBAL_SEED    <- 42
 set.seed(GLOBAL_SEED)
 
 # ── Preprocesado ──────────────────────────────────────────────────────────────
-N_TOP_GENES    <- 1000   # genes más variables a retener
+VAR_CUTOFF     <- 0.25   # eliminar el 25% de genes de menor varianza (recomendacion del tutor)
 VST_BLIND      <- TRUE   # VST ciega (recomendado para clustering)
 
 # ── Consensus clustering ──────────────────────────────────────────────────────
@@ -130,7 +130,7 @@ expr_raw <- load_counts(DATA_FILE)
 meta <- load_metadata(META_FILE, META_COLS)
 
 # Filtrado por varianza y normalización VST
-expr_vst <- preprocess_expression(expr_raw, n_top = N_TOP_GENES,
+expr_vst <- preprocess_expression(expr_raw, var_quantile_cutoff = VAR_CUTOFF,
                                   blind = VST_BLIND, seed = GLOBAL_SEED)
 
 # Alinear muestras entre expresión y metadatos

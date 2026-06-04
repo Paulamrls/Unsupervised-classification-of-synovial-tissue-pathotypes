@@ -105,9 +105,9 @@ export_all_results <- function(all_clusters, final_clusters, cluster_labels,
   # ── Parámetros del análisis (reproducibilidad) ─────────────────────────────
   cat("  Exportando parámetros...\n")
   params <- data.frame(
-    parameter = c("k", "global_seed", "n_top_genes", "best_method",
+    parameter = c("k", "global_seed", "var_quantile_cutoff", "best_method",
                   "n_methods_run", "date"),
-    value     = c(k, GLOBAL_SEED, N_TOP_GENES, best_method,
+    value     = c(k, GLOBAL_SEED, VAR_CUTOFF, best_method,
                   length(all_clusters), as.character(Sys.Date()))
   )
   save_table(params, "analysis_parameters.csv",

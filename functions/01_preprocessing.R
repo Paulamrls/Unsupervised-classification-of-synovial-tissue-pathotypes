@@ -109,7 +109,7 @@ detect_column <- function(actual_cols, candidates) {
 }
 
 # ── Filtrado y normalización VST ──────────────────────────────────────────────
-preprocess_expression <- function(expr, n_top = 1000, blind = TRUE,
+preprocess_expression <- function(expr, var_quantile_cutoff = 0.25, blind = TRUE,
                                    seed = 42) {
   set.seed(seed)
 
@@ -118,12 +118,16 @@ preprocess_expression <- function(expr, n_top = 1000, blind = TRUE,
   expr_keep <- expr[keep, , drop = FALSE]
   cat(sprintf("  Genes tras filtro de expresion minima: %d\n", nrow(expr_keep)))
 
-  # 2. Seleccionar los n_top genes más variables (por varianza)
-  var_genes <- apply(expr_keep, 1, var)
-  n_select  <- min(n_top, length(var_genes))
-  top_genes <- names(sort(var_genes, decreasing = TRUE))[seq_len(n_select)]
-  expr_filt <- expr_keep[top_genes, , drop = FALSE]
-  cat(sprintf("  Top %d genes mas variables seleccionados.\n", n_select))
+  # 2. Eliminar el 25% de genes de menor varianza (recomendacion del tutor):
+  #    en lugar de quedarse con un numero fijo de genes, se conserva el 75%
+  #    superior por varianza. Esto retiene mas informacion biologica que
+  #    seleccionar un top N arbitrario.
+  var_genes   <- apply(expr_keep, 1, var)
+  var_cutoff  <- quantile(var_genes, probs = var_quantile_cutoff, na.rm = TRUE)
+  top_genes   <- names(var_genes[var_genes >= var_cutoff])
+  expr_filt   <- expr_keep[top_genes, , drop = FALSE]
+  cat(sprintf("  Genes retenidos tras eliminar el %d%% de menor varianza: %d\n",
+              round(var_quantile_cutoff * 100), nrow(expr_filt)))
 
   # Garantizar nombres de columna antes de DESeq2
   if (is.null(colnames(expr_filt)) || any(is.na(colnames(expr_filt))))
