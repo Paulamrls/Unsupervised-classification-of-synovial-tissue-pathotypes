@@ -26,6 +26,9 @@ k <- 5
 #   "clean"       → solo muestras con patotipo válido, contaminadas eliminadas
 RUN_MODE <- "pathotypes"
 
+## Si TRUE: ejecuta solo preprocesado + PCA y para (para comparar los 3 modos rápido)
+STOP_AFTER_PCA <- TRUE
+
 ## Reproducibilidad
 
 GLOBAL_SEED    <- 42
@@ -172,7 +175,30 @@ cat("\n=== [2/8] REDUCCIÓN DIMENSIONAL ===\n")
 # 3.1.PCA
 pca_res <- run_pca(expr_scaled, seed = GLOBAL_SEED)
 
-# 3.2.Diffusion Maps 
+# 3.2. Guardar PCA coloreado por patotipo y parar si STOP_AFTER_PCA
+if (STOP_AFTER_PCA) {
+  create_output_dirs(BASE_DIR)
+  pca_file <- file.path(BASE_DIR, "results", "figures", "pca_histological.png")
+  # En modo "all" puede no haber patotipos válidos para colorear
+  pt_order  <- if (RUN_MODE == "all") unique(na.omit(meta_clean$pathotype_clean)) else PATHOTYPE_ORDER
+  pt_colors <- PATHOTYPE_COLORS[pt_order]
+  p_pca <- plot_pca_histological(
+    pca_res          = pca_res,
+    meta             = meta_clean,
+    pathotype_col    = "pathotype_clean",
+    pathotype_order  = pt_order,
+    pathotype_colors = pt_colors,
+    title            = paste0("PCA — modo: ", RUN_MODE,
+                              " (", ncol(expr_scaled), " muestras, ",
+                              nrow(expr_scaled), " genes)")
+  )
+  ggsave(pca_file, p_pca, width = 7, height = 5, dpi = 150)
+  cat(sprintf("  PCA guardado en: %s\n", pca_file))
+  cat(sprintf("  STOP_AFTER_PCA = TRUE — pipeline finalizado en modo '%s'.\n", RUN_MODE))
+  stop("Pipeline detenido tras PCA (STOP_AFTER_PCA = TRUE). Cambia RUN_MODE y vuelve a ejecutar.")
+}
+
+# 3.2.Diffusion Maps
 dm_res  <- run_diffusion_maps(expr_scaled, n_dims = DM_N_DIMS,
                                seed = GLOBAL_SEED)
 
