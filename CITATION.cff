@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+message: "If you use this workflow, please cite this repository."
+title: "Unsupervised transcriptomic classification of rheumatoid arthritis synovial tissue"
+type: software
+authors:
+  - family-names: "Morales Sandoica"
+    given-names: "Paula"
+repository-code: "https://github.com/Paulamrls/Unsupervised-classification-of-synovial-tissue-pathotypes"

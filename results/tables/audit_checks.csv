@@ -1,0 +1,8 @@
+"check","value"
+"total_samples",210
+"unique_samples",210
+"clusters",5
+"cluster_size_sum",210
+"top_markers",100
+"all_markers_pass_FDR",1
+"all_markers_pass_log2FC",1
